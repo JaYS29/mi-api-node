@@ -1,4 +1,5 @@
 import express from "express";
+import type { Request, Response, NextFunction } from "express";
 
 const app = express();
 
@@ -14,6 +15,19 @@ app.get("/", (req, res) => {
 app.get("/productos/:id", (req, res) => {
   const id = req.params.id;
   res.json({ id });
+});
+
+app.get("/error", (req, res, next) => {
+  next(new Error("Error de prueba"));
+});
+
+app.get("/error", (req, res, next) => {
+  next(new Error("Error de prueba"));
+});
+
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  console.error(err.message);
+  res.status(500).json({ error: "Algo salió mal" });
 });
 
 app.listen(3000, () => {
