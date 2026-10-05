@@ -17,6 +17,14 @@ app.get("/productos/:id", (req, res) => {
   res.json({ id });
 });
 
+app.get("/externo/:id", async (req, res) => {
+  const respuesta = await fetch(
+    "https://dummyjson.com/products/" + req.params.id,
+  );
+  const producto = await respuesta.json();
+  res.json(producto);
+});
+
 app.get("/error", (req, res, next) => {
   next(new Error("Error de prueba"));
 });
