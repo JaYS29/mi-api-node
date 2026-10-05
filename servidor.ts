@@ -50,10 +50,14 @@ app.get("/tareas", (req, res) => {
 });
 
 app.get("/tareas/:id", (req, res) => {
+  const antes = structuredClone(tareas);
   const tarea = tareas.find((t) => t.id === Number(req.params.id));
   if (!tarea) {
-    return res.status(404).json({ error: "Tarea no encontrada" });
+    const respuesta: ErrorRespuesta = { error: "Tarea no encontrada" };
+    registrar("GET /tareas/:id", antes, 404, respuesta);
+    return res.status(404).json(respuesta);
   }
+  registrar("GET /tareas/:id", antes, 200, tarea);
   res.json(tarea);
 });
 
