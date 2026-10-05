@@ -1,7 +1,30 @@
 import express from "express";
+import { appendFileSync } from "node:fs";
 import type { Request, Response, NextFunction } from "express";
 
 const app = express();
+interface Tarea {
+  id: number;
+  titulo: string;
+  completada: boolean;
+}
+
+const tareas: Tarea[] = [
+  { id: 1, titulo: "Aprender Express", completada: true },
+  { id: 2, titulo: "Construir una API", completada: false },
+];
+
+app.get("/tareas", (req, res) => {
+  res.json(tareas);
+});
+
+app.get("/tareas/:id", (req, res) => {
+  const tarea = tareas.find((t) => t.id === Number(req.params.id));
+  if (!tarea) {
+    return res.status(404).json({ error: "Tarea no encontrada" });
+  }
+  res.json(tarea);
+});
 
 app.use((req, res, next) => {
   console.log(req.method + " " + req.path);
