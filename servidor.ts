@@ -22,83 +22,64 @@ app.get("/", (req, res) => {
   res.json({ mensaje: "API funcionando" });
 });
 
-app.post("/tareas", (req, res) => {
-  const antes = structuredClone(tareas);
-  // El ?. evita un error si la petición llegó sin cuerpo y req.body es undefined
-  const titulo = req.body?.titulo;
-  // El id es el mayor de los existentes más uno. Si no hay tareas, Math.max devuelve -Infinity, por eso ese caso arranca en 1
-  const id = tareas.length > 0 ? Math.max(...tareas.map((t) => t.id)) + 1 : 1;
-  // Se guarda el título sin los espacios de los extremos, igual que al validarlo
-  const nueva: Tarea = { id, titulo: titulo.trim(), completada: false };
-  tareas.push(nueva);
-  registrar("POST /tareas", antes, 201, nueva);
-  res.status(201).json(nueva);
-});
-
 app.get("/productos/:id", (req, res) => {
   const id = req.params.id;
   res.json({ id });
 });
 
-app.get("/externo/:id", async (req, res) => {
-  const respuesta = await fetch(
-    "https://dummyjson.com/products/" + req.params.id,
-  );
-  const producto = await respuesta.json();
-  res.json(producto);
+app.get("/externo/:id", async (req, res, next) => {
+  try {
+    const respuesta = await fetch(
+      "https://dummyjson.com/products/" + req.params.id,
+    );
+    if (!respuesta.ok) {
+      return res
+        .status(respuesta.status)
+        .json({ error: "No se pudo obtener el producto" });
+    }
+    const producto = await respuesta.json();
+    res.json(producto);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/buscar", async (req, res, next) => {
+  const termino = req.query.q;
+  if (!termino) {
+    return res.status(400).json({ error: "Falta el parámetro de búsqueda q" });
+  }
+  try {
+    const url =
+      "https://dummyjson.com/products/search?q=" +
+      encodeURIComponent(termino as string);
+    const respuesta = await fetch(url);
+    const resultado = await respuesta.json();
+    res.json(resultado);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/categoria/:nombre", async (req, res, next) => {
+  try {
+    const respuesta = await fetch(
+      "https://dummyjson.com/products/category/" + req.params.nombre,
+    );
+    if (!respuesta.ok) {
+      return res
+        .status(respuesta.status)
+        .json({ error: "No se pudo obtener la categoría" });
+    }
+    const resultado = await respuesta.json();
+    res.json(resultado);
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.get("/error", (req, res, next) => {
   next(new Error("Error de prueba"));
-});
-
-app.put("/tareas/:id", (req, res) => {
-  const antes = structuredClone(tareas);
-  const tarea = tareas.find((t) => t.id === Number(req.params.id));
-  if (!tarea) {
-    const respuesta: ErrorRespuesta = { error: "Tarea no encontrada" };
-    registrar("PUT /tareas/:id", antes, 404, respuesta);
-    return res.status(404).json(respuesta);
-  }
-
-  const titulo = req.body?.titulo;
-  const completada = req.body?.completada;
-
-  // Agregá acá la validación de titulo y completada (paso 2)
-  if (
-    typeof titulo !== "string" ||
-    titulo.trim() === "" ||
-    typeof completada !== "boolean"
-  ) {
-    const respuesta: ErrorRespuesta = {
-      error:
-        "El título debe ser un texto no vacío y completada debe ser un booleano",
-    };
-    registrar("PUT /tareas/:id", antes, 400, respuesta);
-    return res.status(400).json(respuesta);
-  }
-
-  // Se modifica el objeto que ya está dentro del array
-  tarea.titulo = titulo.trim();
-  tarea.completada = completada;
-  registrar("PUT /tareas/:id", antes, 200, tarea);
-  res.json(tarea);
-});
-
-app.delete("/tareas/:id", (req, res) => {
-  const antes = structuredClone(tareas);
-  const indice = tareas.findIndex((t) => t.id === Number(req.params.id));
-  if (indice === -1) {
-    const respuesta: ErrorRespuesta = { error: "Tarea no encontrada" };
-    registrar("DELETE /tareas/:id", antes, 404, respuesta);
-    return res.status(404).json(respuesta);
-  }
-
-  // Agregá acá el borrado de la tarea (paso 2)
-  tareas.splice(indice, 1);
-
-  registrar("DELETE /tareas/:id", antes, 204, null);
-  res.status(204).send();
 });
 
 app.use(manejadorErrores);
