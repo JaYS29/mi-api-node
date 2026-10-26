@@ -1,6 +1,8 @@
 import express from "express";
 import { appendFileSync } from "node:fs";
 import type { Request, Response, NextFunction } from "express";
+import { saludo } from "./middlewares/prueba.js";
+console.log(saludo);
 
 interface Tarea {
   id: number;
@@ -33,6 +35,8 @@ function registrar(
 
 const app = express();
 
+app.use(express.json());
+
 app.use((req, res, next) => {
   console.log(req.method + " " + req.path);
   next();
@@ -61,6 +65,19 @@ app.get("/tareas/:id", (req, res) => {
   res.json(tarea);
 });
 
+app.post("/tareas", (req, res) => {
+  const antes = structuredClone(tareas);
+  // El ?. evita un error si la petición llegó sin cuerpo y req.body es undefined
+  const titulo = req.body?.titulo;
+  // El id es el mayor de los existentes más uno. Si no hay tareas, Math.max devuelve -Infinity, por eso ese caso arranca en 1
+  const id = tareas.length > 0 ? Math.max(...tareas.map((t) => t.id)) + 1 : 1;
+  // Se guarda el título sin los espacios de los extremos, igual que al validarlo
+  const nueva: Tarea = { id, titulo: titulo.trim(), completada: false };
+  tareas.push(nueva);
+  registrar("POST /tareas", antes, 201, nueva);
+  res.status(201).json(nueva);
+});
+
 app.get("/productos/:id", (req, res) => {
   const id = req.params.id;
   res.json({ id });
@@ -76,6 +93,39 @@ app.get("/externo/:id", async (req, res) => {
 
 app.get("/error", (req, res, next) => {
   next(new Error("Error de prueba"));
+});
+
+app.put("/tareas/:id", (req, res) => {
+  const antes = structuredClone(tareas);
+  const tarea = tareas.find((t) => t.id === Number(req.params.id));
+  if (!tarea) {
+    const respuesta: ErrorRespuesta = { error: "Tarea no encontrada" };
+    registrar("PUT /tareas/:id", antes, 404, respuesta);
+    return res.status(404).json(respuesta);
+  }
+
+  const titulo = req.body?.titulo;
+  const completada = req.body?.completada;
+
+  // Agregá acá la validación de titulo y completada (paso 2)
+  if (
+    typeof titulo !== "string" ||
+    titulo.trim() === "" ||
+    typeof completada !== "boolean"
+  ) {
+    const respuesta: ErrorRespuesta = {
+      error:
+        "El título debe ser un texto no vacío y completada debe ser un booleano",
+    };
+    registrar("PUT /tareas/:id", antes, 400, respuesta);
+    return res.status(400).json(respuesta);
+  }
+
+  // Se modifica el objeto que ya está dentro del array
+  tarea.titulo = titulo.trim();
+  tarea.completada = completada;
+  registrar("PUT /tareas/:id", antes, 200, tarea);
+  res.json(tarea);
 });
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
