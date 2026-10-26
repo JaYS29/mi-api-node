@@ -5,17 +5,14 @@ import type { RespuestaTareas, Tarea, ErrorRespuesta } from "./tipos.js";
 
 import { tareas } from "./datos.js";
 import { registrar } from "./registro.js";
+import { logger } from "./middlewares/logger.js";
 
 console.log(saludo);
 
 const app = express();
 
 app.use(express.json());
-
-app.use((req, res, next) => {
-  console.log(req.method + " " + req.path);
-  next();
-});
+app.use(logger);
 
 app.get("/", (req, res) => {
   res.json({ mensaje: "API funcionando" });
