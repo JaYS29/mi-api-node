@@ -1,11 +1,12 @@
 import express from "express";
-import type { Request, Response, NextFunction } from "express";
-import { saludo } from "./middlewares/prueba.js";
-import type { RespuestaTareas, Tarea, ErrorRespuesta } from "./tipos.js";
 
-import { tareas } from "./datos.js";
-import { registrar } from "./registro.js";
 import { logger } from "./middlewares/logger.js";
+import { manejadorErrores } from "./middlewares/manejadorErrores.js";
+import { registrar } from "./registro.js";
+import { saludo } from "./middlewares/prueba.js";
+import { tareas } from "./datos.js";
+
+import type { RespuestaTareas, Tarea, ErrorRespuesta } from "./tipos.js";
 
 console.log(saludo);
 
@@ -134,10 +135,7 @@ app.delete("/tareas/:id", (req, res) => {
   res.status(204).send();
 });
 
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error(err.message);
-  res.status(500).json({ error: "Algo salió mal" });
-});
+app.use(manejadorErrores);
 
 app.listen(3000, () => {
   console.log("Servidor corriendo en el puerto 3000");
