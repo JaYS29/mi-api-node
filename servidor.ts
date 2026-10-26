@@ -47,10 +47,28 @@ app.get("/", (req, res) => {
 });
 
 app.get("/tareas", (req, res) => {
-  // structuredClone guarda una copia independiente del estado actual, no una referencia al mismo array
   const antes = structuredClone(tareas);
-  registrar("GET /tareas", antes, 200, tareas);
-  res.json(tareas);
+  const filtro = req.query.completada;
+  const accion =
+    filtro === undefined ? "GET /tareas" : "GET /tareas?completada=" + filtro;
+  let resultado: Tarea[] = tareas;
+
+  // Agregá acá la validación del filtro (paso 2)
+  if (filtro !== undefined && filtro !== "true" && filtro !== "false") {
+    const respuesta: ErrorRespuesta = {
+      error: "El filtro completada debe ser 'true' o 'false'",
+    };
+    registrar(accion, antes, 400, respuesta);
+    return res.status(400).json(respuesta);
+  }
+
+  // Agregá acá el filtrado de las tareas (paso 3)
+  if (filtro !== undefined) {
+    resultado = tareas.filter((t) => t.completada === (filtro === "true"));
+  }
+
+  registrar(accion, antes, 200, resultado);
+  res.json(resultado);
 });
 
 app.get("/tareas/:id", (req, res) => {
