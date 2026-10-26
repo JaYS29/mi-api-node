@@ -128,6 +128,22 @@ app.put("/tareas/:id", (req, res) => {
   res.json(tarea);
 });
 
+app.delete("/tareas/:id", (req, res) => {
+  const antes = structuredClone(tareas);
+  const indice = tareas.findIndex((t) => t.id === Number(req.params.id));
+  if (indice === -1) {
+    const respuesta: ErrorRespuesta = { error: "Tarea no encontrada" };
+    registrar("DELETE /tareas/:id", antes, 404, respuesta);
+    return res.status(404).json(respuesta);
+  }
+
+  // Agregá acá el borrado de la tarea (paso 2)
+  tareas.splice(indice, 1);
+
+  registrar("DELETE /tareas/:id", antes, 204, null);
+  res.status(204).send();
+});
+
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error(err.message);
   res.status(500).json({ error: "Algo salió mal" });
