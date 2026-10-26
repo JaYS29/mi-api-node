@@ -2,19 +2,8 @@ import express from "express";
 import { appendFileSync } from "node:fs";
 import type { Request, Response, NextFunction } from "express";
 import { saludo } from "./middlewares/prueba.js";
+import type { RespuestaTareas, Tarea, ErrorRespuesta } from "./tipos.js";
 console.log(saludo);
-
-interface Tarea {
-  id: number;
-  titulo: string;
-  completada: boolean;
-}
-
-interface ErrorRespuesta {
-  error: string;
-}
-// Lo que puede devolver una operación: una tarea, la lista, un error, o nada (null)
-type RespuestaTareas = Tarea | Tarea[] | ErrorRespuesta | null;
 
 const tareas: Tarea[] = [
   { id: 1, titulo: "Aprender Express", completada: true },
