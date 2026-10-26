@@ -3,12 +3,10 @@ import { appendFileSync } from "node:fs";
 import type { Request, Response, NextFunction } from "express";
 import { saludo } from "./middlewares/prueba.js";
 import type { RespuestaTareas, Tarea, ErrorRespuesta } from "./tipos.js";
-console.log(saludo);
 
-const tareas: Tarea[] = [
-  { id: 1, titulo: "Aprender Express", completada: true },
-  { id: 2, titulo: "Construir una API", completada: false },
-];
+import { tareas } from "./datos.js";
+
+console.log(saludo);
 
 function registrar(
   accion: string,
