@@ -75,12 +75,18 @@ rutasTareas.put("/:id", (req, res) => {
   const completada = req.body?.completada;
 
   // Agregá acá la validación de titulo y completada (paso 2)
+
   if (typeof titulo !== "string" || titulo.trim() === "") {
     const respuesta: ErrorRespuesta = { error: "El título es obligatorio" };
-    registrar("POST /tareas", antes, 400, respuesta);
+    registrar("PUT /tareas/:id", antes, 400, respuesta);
     return res.status(400).json(respuesta);
   }
 
+  if (typeof completada !== "boolean") {
+    const respuesta: ErrorRespuesta = { error: "completada debe ser booleano" };
+    registrar("PUT /tareas/:id", antes, 400, respuesta);
+    return res.status(400).json(respuesta);
+  }
   // Se modifica el objeto que ya está dentro del array
   tarea.titulo = titulo.trim();
   tarea.completada = completada;
